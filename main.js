@@ -1,146 +1,150 @@
 document.addEventListener('DOMContentLoaded', () => {
     const burgerMenu = document.getElementById('burger-menu');
-    const navMenu = document.getElementById('nav-menu');
-    const appContent = document.getElementById('app-content');
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.getElementById('nav-links');
+    const allPages = document.querySelectorAll('.page');
+    const allNavLinks = document.querySelectorAll('.nav-link');
 
     // --- Burger Menu Toggle ---
     burgerMenu.addEventListener('click', () => {
-        burgerMenu.classList.toggle('active');
-        navMenu.classList.toggle('active');
+        burgerMenu.classList.toggle('toggle');
+        navLinks.classList.toggle('active');
     });
 
-    // --- Navigation ---
-    const routes = {
-        '#home': renderHomePage,
-        '#supported': renderSupportedPage,
-        '#credits': renderCreditsPage
-    };
+    // --- Navigation Logic ---
+    function navigateTo(hash) {
+        // Hide all pages
+        allPages.forEach(page => page.classList.remove('active'));
+        // Show the target page
+        const targetPage = document.querySelector(hash);
+        if (targetPage) {
+            targetPage.classList.add('active');
+        }
 
-    function navigate() {
-        const hash = window.location.hash || '#home';
-        const renderFunction = routes[hash] || renderHomePage;
-        appContent.innerHTML = ''; // Clear previous content
-        renderFunction();
+        // Update active state on nav links
+        allNavLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === hash) {
+                link.classList.add('active');
+            }
+        });
+
+        // Close mobile menu after navigation
+        if (burgerMenu.classList.contains('toggle')) {
+            burgerMenu.classList.remove('toggle');
+            navLinks.classList.remove('active');
+        }
     }
 
-    // Close nav menu on link click
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (navMenu.classList.contains('active')) {
-                burgerMenu.classList.remove('active');
-                navMenu.classList.remove('active');
-            }
+    // Handle clicks on nav links
+    allNavLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetHash = link.getAttribute('href');
+            window.location.hash = targetHash;
         });
     });
     
-    // Event delegation for the copy button
-    appContent.addEventListener('click', (e) => {
-        if (e.target.id === 'copy-script-btn') {
-            const scriptText = document.querySelector('#script-content').textContent;
-            navigator.clipboard.writeText(scriptText).then(() => {
-                e.target.textContent = 'Copied!';
-                e.target.classList.add('copied');
-                setTimeout(() => {
-                    e.target.textContent = 'Copy';
-                    e.target.classList.remove('copied');
-                }, 2000);
-            });
-        }
+    // Listen for hash changes to navigate
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash || '#home';
+        navigateTo(hash);
     });
+    
+    // Initial page load
+    const initialHash = window.location.hash || '#home';
+    navigateTo(initialHash);
 
-    window.addEventListener('hashchange', navigate);
-    navigate(); // Initial page load
 
-    // --- Data Loading ---
+    // --- Data Loading and Rendering ---
     function getWebsiteData() {
         const data = localStorage.getItem('nexusDevelopedData');
         return data ? JSON.parse(data) : {
             script: 'loadstring(game:HttpGet("https://example.com/script.lua"))()',
-            enableHighlighting: true, // Default to true
+            enableHighlighting: true,
             supportedGames: [],
             credits: []
         };
     }
 
-    // --- Page Rendering Functions ---
-    function renderHomePage() {
+    function renderAllContent() {
         const data = getWebsiteData();
-        
-        // Conditionally add classes for syntax highlighting
+        renderHomePage(data);
+        renderSupportedPage(data);
+        renderCreditsPage(data);
+    }
+
+    // --- Render Functions ---
+    function renderHomePage(data) {
+        const container = document.getElementById('script-container-content');
+        if (!container) return;
+
         const preClass = data.enableHighlighting ? 'class="language-lua"' : '';
         const codeClass = data.enableHighlighting ? 'class="language-lua"' : '';
-        
-        const homePageHTML = `
-            <div id="home-page" class="page">
-                <div class="page-center">
-                    <h2 class="page-title">Main Script</h2>
-                </div>
-                <div class="script-container">
-                    <button id="copy-script-btn">Copy</button>
-                    <h2>Script</h2>
-                    <pre ${preClass}><code id="script-content" ${codeClass}>${data.script || 'No script set by admin.'}</code></pre>
-                </div>
-            </div>
+
+        container.innerHTML = `
+            <button class="btn btn-copy" id="copy-btn">Copy</button>
+            <pre ${preClass}><code id="script-content" ${codeClass}>${data.script || ''}</code></pre>
         `;
-        appContent.innerHTML = homePageHTML;
-        
-        // Trigger Prism to highlight the code if enabled
+
         if (data.enableHighlighting && window.Prism) {
             Prism.highlightAll();
         }
+
+        // Add copy functionality
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(data.script).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
     }
 
-    function renderSupportedPage() {
-        const data = getWebsiteData();
-        let cardsHTML = '';
+    function renderSupportedPage(data) {
+        const grid = document.getElementById('supported-games-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
         if (data.supportedGames && data.supportedGames.length > 0) {
             data.supportedGames.forEach(game => {
-                cardsHTML += `
-                    <div class="card">
-                        <img src="${game.image || 'https://via.placeholder.com/300x180?text=No+Image'}" alt="${game.name}" class="card-image">
-                        <div class="card-content">
-                            <h3 class="card-title">${game.name || 'No Name'}</h3>
-                            <div class="card-status ${game.status === 'working' ? 'status-working' : 'status-not-working'}">
-                                ${game.status === 'working' ? 'Working' : 'Not Working'}
-                            </div>
-                            <a href="${game.redirection || '#'}" target="_blank" class="card-button">Go to Game</a>
+                const statusClass = game.status === 'working' ? 'status-working' : 'status-not-working';
+                const statusText = game.status === 'working' ? 'Working' : 'Not Working';
+                grid.innerHTML += `
+                    <div class="game-card">
+                        <img src="${game.image || 'https://via.placeholder.com/300x180?text=No+Image'}" alt="${game.name}" class="game-card-img">
+                        <div class="game-card-content">
+                            <h3>${game.name || 'No Name'}</h3>
+                            <div class="game-card-status ${statusClass}">${statusText}</div>
+                            <a href="${game.redirection || '#'}" target="_blank" class="btn">Go to Game</a>
                         </div>
                     </div>`;
             });
         } else {
-            cardsHTML = '<p>No supported games have been added yet.</p>';
+            grid.innerHTML = '<p>No supported games have been added yet.</p>';
         }
-        const supportedPageHTML = `
-            <div id="supported-page" class="page">
-                <div class="page-center"><h2 class="page-title">Supported Games</h2></div>
-                <div class="card-grid">${cardsHTML}</div>
-            </div>`;
-        appContent.innerHTML = supportedPageHTML;
     }
 
-    function renderCreditsPage() {
-        const data = getWebsiteData();
-        let cardsHTML = '';
+    function renderCreditsPage(data) {
+        const grid = document.getElementById('credits-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
         if (data.credits && data.credits.length > 0) {
             data.credits.forEach(person => {
-                cardsHTML += `
-                    <div class="card">
-                        <img src="${person.image || 'https://via.placeholder.com/300x180?text=No+Image'}" alt="${person.name}" class="card-image">
-                        <div class="card-content">
-                            <h3 class="card-title">${person.name || 'No Name'}</h3>
-                            <p class="card-subtitle">${person.role || 'No Role'}</p>
-                        </div>
+                grid.innerHTML += `
+                    <div class="credit-card">
+                        <img src="${person.image || 'https://via.placeholder.com/120?text=Avatar'}" alt="${person.name}">
+                        <h3>${person.name || 'No Name'}</h3>
+                        <p>${person.role || 'No Role'}</p>
                     </div>`;
             });
         } else {
-            cardsHTML = '<p>No credits have been added yet.</p>';
+            grid.innerHTML = '<p>No credits have been added yet.</p>';
         }
-        const creditsPageHTML = `
-            <div id="credits-page" class="page">
-                <div class="page-center"><h2 class="page-title">Credits</h2></div>
-                <div class="card-grid">${cardsHTML}</div>
-            </div>`;
-        appContent.innerHTML = creditsPageHTML;
     }
+
+    // Load all content on start
+    renderAllContent();
 });
