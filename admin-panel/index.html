@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Nexus Developed</title>
+    <!-- We reuse the same stylesheet -->
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        /* Additional styles for the admin panel */
+        body {
+            background-image: linear-gradient(135deg, #1a1a1a 0%, #3d0508 100%);
+        }
+        .admin-container {
+            max-width: 900px;
+            margin: 100px auto 40px;
+            padding: 2rem;
+            background: var(--dark-bg);
+            border-radius: 8px;
+            border: 1px solid var(--primary-red);
+        }
+        .login-form, .admin-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        label {
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+        input, textarea, select, button {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+        textarea {
+            min-height: 150px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        button {
+            background: var(--primary-red);
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #b80710;
+        }
+        .admin-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary-red);
+        }
+        h2 { font-family: var(--font-title); color: var(--primary-red); }
+        .item-card {
+            background: #333;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .error-msg { color: #ff5555; text-align: center; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- LOGIN FORM -->
+        <div id="login-form" class="login-form">
+            <h1 class="logo" style="text-align: center;">Admin Panel</h1>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <button id="login-button">Login</button>
+            <p id="error-msg" class="error-msg hidden">Invalid username or password.</p>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="admin-dashboard" class="admin-dashboard hidden">
+            <h1 class="logo" style="text-align: center;">Manage Content</h1>
+            
+            <!-- Script Section -->
+            <div class="admin-section">
+                <h2>Home Page Script</h2>
+                <div class="form-group">
+                    <label for="main-script">Script (Only 1 allowed)</label>
+                    <textarea id="main-script"></textarea>
+                </div>
+            </div>
+
+            <!-- Supported Games Section -->
+            <div class="admin-section">
+                <h2>Supported Games</h2>
+                <div id="supported-games-list"></div>
+                <button id="add-game-button">+ Add New Game</button>
+            </div>
+
+            <!-- Credits Section -->
+            <div class="admin-section">
+                <h2>Credits Page</h2>
+                <div id="credits-list"></div>
+                <button id="add-credit-button">+ Add New Credit</button>
+            </div>
+            
+            <button id="save-all-button">Save All Changes</button>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
