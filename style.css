@@ -160,6 +160,7 @@ main {
     max-width: 800px;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    position: relative; /* Needed for positioning the copy button */
 }
 
 #home-page h2 {
@@ -258,4 +259,71 @@ main {
 
 .card-button:hover {
     background: #b80710;
+}
+
+/* --- NEW STYLES --- */
+
+/* Copy Button Styles */
+#copy-script-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #444;
+    color: var(--text-color);
+    border: 1px solid #666;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#copy-script-btn:hover {
+    background: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+#copy-script-btn.copied {
+    background: #1a4d2e; /* Green for success */
+    color: #a3ffb4;
+}
+
+/* Prism.js Theme Overrides */
+/* This makes the syntax highlighting match your red/black theme */
+pre[class*="language-"] {
+    border: none !important;
+    border-left: 5px solid var(--primary-red) !important;
+    background: var(--darker-bg) !important;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    background: var(--darker-bg) !important;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: #6c757d;
+}
+
+.token.keyword,
+.token.boolean,
+.token.function-name,
+.token.constant {
+    color: var(--primary-red);
+}
+
+.token.string {
+    color: #a3ffb4;
+}
+
+.token.number {
+    color: #7aa5ff;
+}
+
+.token.operator,
+.token.punctuation {
+    color: #ccc;
 }
