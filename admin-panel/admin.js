@@ -1,32 +1,48 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
-    const adminDashboard = document.getElementById('admin-dashboard');
+    // --- Account Management Setup ---
+    const ROLES = {
+        KAZUMA: 'Kazuma', // Super Admin
+        OWNER: 'Owner',
+        CO_OWNER: 'Co-Owner',
+        DEV: 'Dev'
+    };
+
+    function initializeUsers() {
+        if (!localStorage.getItem('nexusDevelopedUsers')) {
+            const defaultUsers = [
+                { username: 'Kazuma', password: 'Kazuma', role: ROLES.KAZUMA }
+            ];
+            localStorage.setItem('nexusDevelopedUsers', JSON.stringify(defaultUsers));
+        }
+    }
+    initializeUsers();
+
+    // --- DOM Elements ---
+    const loginSection = document.getElementById('login-section');
+    const dashboardSection = document.getElementById('dashboard-section');
     const loginButton = document.getElementById('login-button');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const errorMsg = document.getElementById('error-msg');
-    
-    const ownerAccounts = [
-        { user: 'Kazuma', pass: 'Kazuma' },
-        { user: 'Owner', pass: 'Owner' }
-    ];
 
-    if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+    const userManagementSection = document.getElementById('user-management-section');
+    const contentManagementSection = document.getElementById('content-management-section');
+    
+    let loggedInUser = null;
+
+    // --- Login Logic ---
+    if (sessionStorage.getItem('loggedInUser')) {
+        loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
         showDashboard();
     }
-    
-    // --- Login Logic ---
+
     loginButton.addEventListener('click', () => {
-        const username = usernameInput.value;
-        const password = passwordInput.value;
+        const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+        const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
 
-        // Made username check case-insensitive. Password is still case-sensitive.
-        const isValid = ownerAccounts.some(acc => 
-            acc.user.toLowerCase() === username.toLowerCase() && acc.pass === password
-        );
-
-        if (isValid) {
-            sessionStorage.setItem('isAdminLoggedIn', 'true');
+        if (user) {
+            loggedInUser = user;
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
             showDashboard();
         } else {
             errorMsg.classList.remove('hidden');
@@ -34,53 +50,169 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function showDashboard() {
-        loginForm.classList.add('hidden');
-        adminDashboard.classList.remove('hidden');
-        loadDataIntoForms();
+        loginSection.classList.add('hidden');
+        dashboardSection.classList.remove('hidden');
+        updateDashboardVisibility();
+        loadContentDataIntoForms();
+        renderUserManagement();
     }
 
-    // --- Data Management ---
-    let websiteData = {
-        script: '',
-        enableHighlighting: true, // Default value
-        supportedGames: [],
-        credits: []
-    };
+    function updateDashboardVisibility() {
+        const role = loggedInUser.role;
+        // User management is visible to Kazuma, Owner, and Co-Owner
+        if ([ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role)) {
+            userManagementSection.classList.remove('hidden');
+        }
+        // Content management is visible to everyone (Dev and up)
+        if ([ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role)) {
+            contentManagementSection.classList.remove('hidden');
+        }
+    }
 
+    // --- User Management Logic ---
+    function renderUserManagement() {
+        if (![ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role)) return;
+
+        const userList = document.getElementById('user-list');
+        const roleSelect = document.getElementById('new-user-role');
+        const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+
+        userList.innerHTML = '<h4>Existing Users</h4>';
+        users.forEach(user => {
+            let deleteBtn = '';
+            // Permission checks for who can delete whom
+            if (loggedInUser.role === ROLES.KAZUMA && loggedInUser.username !== user.username) {
+                deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
+            } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role) && user.role === ROLES.DEV) {
+                deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
+            }
+            userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
+        });
+
+        // Populate role dropdown based on permissions
+        roleSelect.innerHTML = '';
+        if (loggedInUser.role === ROLES.KAZUMA) {
+            [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`);
+        } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role)) {
+            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`;
+        }
+    }
+
+    document.getElementById('add-user-btn').addEventListener('click', () => {
+        const newUsername = document.getElementById('new-username').value;
+        const newPassword = document.getElementById('new-password').value;
+        const newRole = document.getElementById('new-user-role').value;
+        const userError = document.getElementById('user-error-msg');
+        
+        if (!newUsername || !newPassword) {
+            userError.textContent = 'Username and Password cannot be empty.';
+            userError.classList.remove('hidden');
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) {
+            userError.textContent = 'Username already exists.';
+            userError.classList.remove('hidden');
+            return;
+        }
+        
+        users.push({ username: newUsername, password: newPassword, role: newRole });
+        localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
+        
+        // Clear form and rerender
+        document.getElementById('new-username').value = '';
+        document.getElementById('new-password').value = '';
+        userError.classList.add('hidden');
+        renderUserManagement();
+    });
+
+    document.getElementById('user-list').addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-delete')) {
+            const usernameToDelete = e.target.dataset.username;
+            if (confirm(`Are you sure you want to delete user: ${usernameToDelete}?`)) {
+                let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+                users = users.filter(u => u.username !== usernameToDelete);
+                localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
+                renderUserManagement();
+            }
+        }
+    });
+
+    // --- Content Management Logic (largely the same as before, just with new IDs) ---
+    let websiteData = {};
     const scriptInput = document.getElementById('main-script');
     const highlightingCheckbox = document.getElementById('enable-highlighting');
     const gamesListContainer = document.getElementById('supported-games-list');
     const creditsListContainer = document.getElementById('credits-list');
-    const addGameButton = document.getElementById('add-game-button');
-    const addCreditButton = document.getElementById('add-credit-button');
-    const saveAllButton = document.getElementById('save-all-button');
 
-    function loadDataIntoForms() {
+    function loadContentDataIntoForms() {
         const storedData = localStorage.getItem('nexusDevelopedData');
-        if (storedData) {
-            websiteData = JSON.parse(storedData);
-        }
-        
+        websiteData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
         scriptInput.value = websiteData.script || '';
-        // Load highlighting setting, default to true if not set
         highlightingCheckbox.checked = websiteData.enableHighlighting !== false;
-
         renderGamesForm();
         renderCreditsForm();
     }
 
+    function renderGamesForm() { /* Same as before, just uses item-card */ }
+    function renderCreditsForm() { /* Same as before, just uses item-card */ }
+    
+    // (The rendering functions are complex but unchanged in logic, so I'll put the full code below for copy-pasting)
+    
+    document.getElementById('add-game-btn').addEventListener('click', () => {
+        websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' });
+        renderGamesForm();
+    });
+
+    document.getElementById('add-credit-btn').addEventListener('click', () => {
+        websiteData.credits.push({ name: '', image: '', role: '' });
+        renderCreditsForm();
+    });
+    
+    dashboardSection.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-item-btn')) {
+            const type = e.target.dataset.type;
+            const index = e.target.dataset.index;
+            if (type === 'game') {
+                websiteData.supportedGames.splice(index, 1);
+                renderGamesForm();
+            } else if (type === 'credit') {
+                websiteData.credits.splice(index, 1);
+                renderCreditsForm();
+            }
+        }
+    });
+
+    document.getElementById('save-all-btn').addEventListener('click', () => {
+        websiteData.script = scriptInput.value;
+        websiteData.enableHighlighting = highlightingCheckbox.checked;
+
+        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({
+            name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value,
+            redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value,
+        }));
+        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({
+            name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value,
+            role: card.querySelector('.credit-role').value,
+        }));
+
+        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
+        alert('Content saved successfully!');
+    });
+
+    // --- Full render functions for copy-paste ---
     function renderGamesForm() {
         gamesListContainer.innerHTML = '';
         websiteData.supportedGames.forEach((game, index) => {
             const gameCard = document.createElement('div');
             gameCard.className = 'item-card';
-            gameCard.innerHTML = `
-                <h4>Game #${index + 1}</h4>
-                <div class="form-group"><label>Name</label><input type="text" class="game-name" value="${game.name || ''}" data-index="${index}"></div>
-                <div class="form-group"><label>Image URL</label><input type="text" class="game-image" value="${game.image || ''}" data-index="${index}"></div>
-                <div class="form-group"><label>Game Redirection URL</label><input type="text" class="game-redirection" value="${game.redirection || ''}" data-index="${index}"></div>
-                <div class="form-group"><label>Status</label><select class="game-status" data-index="${index}"><option value="working" ${game.status === 'working' ? 'selected' : ''}>Working</option><option value="not-working" ${game.status === 'not-working' ? 'selected' : ''}>Not Working</option></select></div>
-                <button class="remove-game-button" data-index="${index}">Remove Game</button>`;
+            gameCard.innerHTML = `<h4>Game #${index + 1}</h4>
+                <div class="form-group"><label>Name</label><input type="text" class="game-name" value="${game.name || ''}"></div>
+                <div class="form-group"><label>Image URL</label><input type="text" class="game-image" value="${game.image || ''}"></div>
+                <div class="form-group"><label>Game Redirection URL</label><input type="text" class="game-redirection" value="${game.redirection || ''}"></div>
+                <div class="form-group"><label>Status</label><select class="game-status"><option value="working" ${game.status === 'working' ? 'selected' : ''}>Working</option><option value="not-working" ${game.status === 'not-working' ? 'selected' : ''}>Not Working</option></select></div>
+                <button class="btn btn-delete remove-item-btn" data-type="game" data-index="${index}">Remove Game</button>`;
             gamesListContainer.appendChild(gameCard);
         });
     }
@@ -90,58 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
         websiteData.credits.forEach((credit, index) => {
             const creditCard = document.createElement('div');
             creditCard.className = 'item-card';
-            creditCard.innerHTML = `
-                <h4>Credit #${index + 1}</h4>
-                <div class="form-group"><label>Name</label><input type="text" class="credit-name" value="${credit.name || ''}" data-index="${index}"></div>
-                <div class="form-group"><label>Image URL</label><input type="text" class="credit-image" value="${credit.image || ''}" data-index="${index}"></div>
-                <div class="form-group"><label>Role</label><input type="text" class="credit-role" value="${credit.role || ''}" data-index="${index}"></div>
-                <button class="remove-credit-button" data-index="${index}">Remove Credit</button>`;
+            creditCard.innerHTML = `<h4>Credit #${index + 1}</h4>
+                <div class="form-group"><label>Name</label><input type="text" class="credit-name" value="${credit.name || ''}"></div>
+                <div class="form-group"><label>Image URL</label><input type="text" class="credit-image" value="${credit.image || ''}"></div>
+                <div class="form-group"><label>Role</label><input type="text" class="credit-role" value="${credit.role || ''}"></div>
+                <button class="btn btn-delete remove-item-btn" data-type="credit" data-index="${index}">Remove Credit</button>`;
             creditsListContainer.appendChild(creditCard);
         });
     }
-
-    addGameButton.addEventListener('click', () => {
-        websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' });
-        renderGamesForm();
-    });
-
-    addCreditButton.addEventListener('click', () => {
-        websiteData.credits.push({ name: '', image: '', role: '' });
-        renderCreditsForm();
-    });
-    
-    document.body.addEventListener('click', (e) => {
-        if(e.target.classList.contains('remove-game-button')) {
-            websiteData.supportedGames.splice(e.target.dataset.index, 1);
-            renderGamesForm();
-        }
-        if(e.target.classList.contains('remove-credit-button')) {
-            websiteData.credits.splice(e.target.dataset.index, 1);
-            renderCreditsForm();
-        }
-    });
-
-    saveAllButton.addEventListener('click', () => {
-        // Save Script and highlighting setting
-        websiteData.script = scriptInput.value;
-        websiteData.enableHighlighting = highlightingCheckbox.checked;
-
-        // Save Supported Games
-        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map((card, index) => ({
-            name: card.querySelector('.game-name').value,
-            image: card.querySelector('.game-image').value,
-            redirection: card.querySelector('.game-redirection').value,
-            status: card.querySelector('.game-status').value,
-        }));
-        
-        // Save Credits
-        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map((card, index) => ({
-            name: card.querySelector('.credit-name').value,
-            image: card.querySelector('.credit-image').value,
-            role: card.querySelector('.credit-role').value,
-        }));
-
-        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
-        alert('All changes have been saved successfully!');
-    });
 });
