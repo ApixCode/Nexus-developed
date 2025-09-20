@@ -4,41 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Developed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Russo+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Russo+One&display=swap" rel="stylesheet">
-    
-    <!-- Prism.js for syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
 </head>
 <body>
 
-    <header>
-        <div class="header-container">
-            <h1 class="logo">Nexus Developed</h1>
+    <header class="header">
+        <nav class="navbar">
+            <a href="#home" class="brand-title">Nexus Developed</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#supported" class="nav-link">Supported</a></li>
+                <li><a href="#credits" class="nav-link">Credits</a></li>
+                <li><a href="https://nov-scripts-tos.vercel.app/" target="_blank">Terms of Service</a></li>
+            </ul>
             <div class="burger-menu" id="burger-menu">
-                <div class="line1"></div>
-                <div class="line2"></div>
-                <div class="line3"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
             </div>
-        </div>
+        </nav>
     </header>
 
-    <nav id="nav-menu">
-        <ul>
-            <li><a href="#home" class="nav-link">Home</a></li>
-            <li><a href="#supported" class="nav-link">Supported</a></li>
-            <li><a href="#credits" class="nav-link">Credits</a></li>
-            <li><a href="https://nov-scripts-tos.vercel.app/" target="_blank" class="nav-link">Terms of Service</a></li>
-        </ul>
-    </nav>
+    <main>
+        <!-- Home Page -->
+        <section id="home" class="page active">
+            <div class="container home-content">
+                <h1>NEXUS SCRIPT HUB</h1>
+                <p>The central place for all our scripts and supported games.</p>
+                <div class="script-container" id="script-container-content">
+                    <!-- Script will be injected here -->
+                </div>
+            </div>
+        </section>
 
-    <main id="app-content">
-        <!-- Content will be injected here by JavaScript -->
+        <!-- Supported Page -->
+        <section id="supported" class="page">
+            <div class="container">
+                <h2 class="section-title">Supported Games</h2>
+                <div class="grid" id="supported-games-grid">
+                    <!-- Supported games will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Credits Page -->
+        <section id="credits" class="page">
+            <div class="container">
+                <h2 class="section-title">Our Team</h2>
+                <div class="grid" id="credits-grid">
+                    <!-- Credits will be injected here -->
+                </div>
+            </div>
+        </section>
     </main>
-    
-    <!-- Prism.js Scripts -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
     <script src="main.js"></script>
