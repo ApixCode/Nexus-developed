@@ -4,78 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Developed</title>
-    
-    
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
-    
-    
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Russo+One&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- For icons -->
 </head>
 <body>
 
-    <div id="particles-js"></div>
-
-    <header class="header">
-        <div class="container navbar">
-            <a href="#" class="brand-title nav-link" data-page="home">Nexus Developed</a>
-            <nav>
-                <ul class="nav-links" id="nav-links">
-                    <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
-                    <li><a href="#" class="nav-link" data-page="supported">Supported</a></li>
-                    <li><a href="#" class="nav-link" data-page="credits">Credits</a></li>
-                    <li><a href="https://nov-scripts-tos.vercel.app/" target="_blank">ToS</a></li>
-                </ul>
-            </nav>
+    <header>
+        <div class="header-container">
+            <h1 class="logo">Nexus Developed</h1>
             <div class="burger-menu" id="burger-menu">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
             </div>
         </div>
     </header>
 
-    <main class="container">
-        
-        <section id="home" class="page active">
-            <div class="home-content">
-                <h1>Nexus Developed</h1>
-                <p>The next generation of scripts, designed for performance and reliability.</p>
-                <div class="script-container">
-                
-                    <pre><code id="script-code" class="language-lua"></code></pre>
-                </div>
-                <button class="btn btn-copy" id="copy-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM-1 7a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15A.5.5 0 0 1-1 7zM5 1.5A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1z"/></svg>
-                    <span>Copy Script</span>
-                </button>
-            </div>
-        </section>
+    <nav id="nav-menu">
+        <ul>
+            <li><a href="#home" class="nav-link">Home</a></li>
+            <li><a href="#supported" class="nav-link">Supported</a></li>
+            <li><a href="#credits" class="nav-link">Credits</a></li>
+            <li><a href="https://nov-scripts-tos.vercel.app/" target="_blank" class="nav-link">Terms of Service</a></li>
+        </ul>
+    </nav>
 
-        
-        <section id="supported" class="page">
-            <h2 class="section-title">Supported Games</h2>
-    
-            <div class="game-grid" id="game-grid"></div>
-        </section>
-
-        
-        <section id="credits" class="page">
-            <h2 class="section-title">Our Team</h2>
-            
-            <div class="credits-grid" id="credits-grid"></div>
-        </section>
-
+    <main id="app-content">
+        <!-- Content will be injected here by JavaScript -->
     </main>
     
-    
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-    
-    
-    <script src="script.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
