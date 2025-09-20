@@ -3,132 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Nexus Developed</title>
-    <!-- We reuse the same stylesheet -->
+    <title>Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Russo+One&display=swap" rel="stylesheet">
+    <!-- Reusing the main stylesheet with overrides -->
     <link rel="stylesheet" href="../style.css">
     <style>
-        /* Additional styles for the admin panel */
-        body {
-            background-image: linear-gradient(135deg, #1a1a1a 0%, #3d0508 100%);
-        }
         .admin-container {
             max-width: 900px;
             margin: 100px auto 40px;
             padding: 2rem;
-            background: var(--dark-bg);
+            background: var(--light-dark-color);
             border-radius: 8px;
-            border: 1px solid var(--primary-red);
+            border: 1px solid var(--border-color);
         }
-        .login-form, .admin-dashboard {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+        .admin-form { display: flex; flex-direction: column; gap: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        label { font-weight: bold; color: var(--text-muted-color); }
+        input, textarea, select {
+            width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #444;
+            background: var(--dark-color); color: var(--text-color); font-size: 1rem;
         }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        label {
-            font-weight: bold;
-            color: var(--text-muted);
-        }
-        input, textarea, select, button {
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #2a2a2a;
-            color: var(--text-color);
-            font-size: 1rem;
-        }
-        textarea {
-            min-height: 150px;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        button {
-            background: var(--primary-red);
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #b80710;
-        }
+        textarea { min-height: 150px; font-family: 'Courier New', Courier, monospace; }
+        .btn { width: 100%; }
         .admin-section {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            border-left: 4px solid var(--primary-red);
+            background: var(--dark-color); padding: 1.5rem; border-radius: 8px;
+            margin-bottom: 2rem; border-left: 4px solid var(--primary-color);
         }
-        h2 { font-family: var(--font-title); color: var(--primary-red); }
+        h2 { font-family: 'Russo One', sans-serif; color: var(--primary-color); margin-bottom: 1rem; }
         .item-card {
-            background: #333;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            background: #2a2a2a; padding: 1rem; margin-bottom: 1rem; border-radius: 5px;
+            display: flex; flex-direction: column; gap: 1rem;
         }
         .error-msg { color: #ff5555; text-align: center; }
         .hidden { display: none; }
+        .btn-delete { background-color: #555; }
+        .btn-delete:hover { background-color: #333; }
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <!-- LOGIN FORM -->
-        <div id="login-form" class="login-form">
-            <h1 class="logo" style="text-align: center;">Admin Panel</h1>
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username">
+        <div id="login-section">
+            <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Login</h1>
+            <div class="admin-form">
+                <div class="form-group"><label for="username">Username</label><input type="text" id="username"></div>
+                <div class="form-group"><label for="password">Password</label><input type="password" id="password"></div>
+                <button id="login-button" class="btn">Login</button>
+                <p id="error-msg" class="error-msg hidden">Invalid username or password.</p>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password">
-            </div>
-            <button id="login-button">Login</button>
-            <p id="error-msg" class="error-msg hidden">Invalid username or password.</p>
         </div>
 
         <!-- ADMIN DASHBOARD -->
-        <div id="admin-dashboard" class="admin-dashboard hidden">
-            <h1 class="logo" style="text-align: center;">Manage Content</h1>
+        <div id="dashboard-section" class="hidden">
+            <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Dashboard</h1>
             
-            <!-- Script Section -->
-            <div class="admin-section">
-                <h2>Home Page Script</h2>
-                <div class="form-group">
-                    <label for="main-script">Script (Only 1 allowed)</label>
-                    <textarea id="main-script"></textarea>
-                </div>
-                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-                    <input type="checkbox" id="enable-highlighting" style="width: auto;">
-                    <label for="enable-highlighting" style="margin-bottom: 0;">Enable Lua Syntax Highlighting</label>
+            <!-- User Management Section (Visible to specific roles) -->
+            <div id="user-management-section" class="admin-section hidden">
+                <h2>User Management</h2>
+                <div id="user-list"></div>
+                <div class="item-card" style="margin-top: 2rem;">
+                    <h4>Add New User</h4>
+                    <div class="form-group"><label>New Username</label><input type="text" id="new-username"></div>
+                    <div class="form-group"><label>New Password</label><input type="password" id="new-password"></div>
+                    <div class="form-group"><label>Role</label><select id="new-user-role"></select></div>
+                    <button id="add-user-btn" class="btn">Add User</button>
+                    <p id="user-error-msg" class="error-msg hidden"></p>
                 </div>
             </div>
 
-            <!-- Supported Games Section -->
-            <div class="admin-section">
-                <h2>Supported Games</h2>
-                <div id="supported-games-list"></div>
-                <button id="add-game-button">+ Add New Game</button>
+            <!-- Content Management Section -->
+            <div id="content-management-section" class="hidden">
+                <div class="admin-section">
+                    <h2>Home Page Script</h2>
+                    <div class="form-group"><label for="main-script">Script</label><textarea id="main-script"></textarea></div>
+                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="enable-highlighting" style="width: auto;"><label for="enable-highlighting">Enable Syntax Highlighting</label>
+                    </div>
+                </div>
+                <div class="admin-section"><h2>Supported Games</h2><div id="supported-games-list"></div><button id="add-game-btn" class="btn">+ Add Game</button></div>
+                <div class="admin-section"><h2>Credits Page</h2><div id="credits-list"></div><button id="add-credit-btn" class="btn">+ Add Credit</button></div>
+                <button id="save-all-btn" class="btn">Save All Content Changes</button>
             </div>
-
-            <!-- Credits Section -->
-            <div class="admin-section">
-                <h2>Credits Page</h2>
-                <div id="credits-list"></div>
-                <button id="add-credit-button">+ Add New Credit</button>
-            </div>
-            
-            <button id="save-all-button">Save All Changes</button>
         </div>
     </div>
-
     <script src="admin.js"></script>
 </body>
 </html>
