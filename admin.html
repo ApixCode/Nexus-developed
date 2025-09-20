@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Nexus Developed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-container" class="admin-container">
+        <div class="login-box">
+            <h1>Admin Panel Login</h1>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (hidden by default) -->
+    <div id="dashboard-container" class="admin-container" style="display: none;">
+        <header class="admin-header">
+            <h1>Nexus Developed - Admin Dashboard</h1>
+            <p>Welcome, <span id="admin-username"></span>!</p>
+            <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </header>
+
+        <main class="dashboard-main">
+            <!-- Manage Script -->
+            <section class="admin-section">
+                <h2>Manage Main Script</h2>
+                <textarea id="script-input" rows="4"></textarea>
+            </section>
+
+            <!-- Manage Games -->
+            <section class="admin-section">
+                <h2>Manage Supported Games</h2>
+                <div id="games-list"></div>
+                <button id="add-game-btn" class="btn">Add New Game</button>
+            </section>
+
+            <!-- Manage Credits -->
+            <section class="admin-section">
+                <h2>Manage Credits</h2>
+                <div id="credits-list"></div>
+                <button id="add-credit-btn" class="btn">Add New Credit</button>
+            </section>
+
+            <!-- Manage Admins (for super-admins only) -->
+            <section id="manage-admins-section" class="admin-section" style="display:none;">
+                <h2>Manage Admins</h2>
+                <div id="admins-list"></div>
+                <button id="add-admin-btn" class="btn">Add New Admin</button>
+            </section>
+
+            <button id="save-all-btn" class="btn btn-save">Save All Changes</button>
+        </main>
+    </div>
+
+    <!-- Modals for adding/editing -->
+    <div id="modal-backdrop" style="display: none;">
+        <div id="admin-modal">
+            <h3 id="modal-title">Modal</h3>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <script src="admin-script.js"></script>
+</body>
+</html>
