@@ -1,17 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Account Management Setup ---
-    const ROLES = {
-        KAZUMA: 'Kazuma', // Super Admin
-        OWNER: 'Owner',
-        CO_OWNER: 'Co-Owner',
-        DEV: 'Dev'
-    };
-
+    const ROLES = { KAZUMA: 'Kazuma', OWNER: 'Owner', CO_OWNER: 'Co-Owner', DEV: 'Dev' };
     function initializeUsers() {
         if (!localStorage.getItem('nexusDevelopedUsers')) {
-            const defaultUsers = [
-                { username: 'Kazuma', password: 'Kazuma', role: ROLES.KAZUMA }
-            ];
+            const defaultUsers = [{ username: 'Kazuma', password: 'Kazuma', role: ROLES.KAZUMA }];
             localStorage.setItem('nexusDevelopedUsers', JSON.stringify(defaultUsers));
         }
     }
@@ -26,17 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMsg = document.getElementById('error-msg');
     const userManagementSection = document.getElementById('user-management-section');
     const contentManagementSection = document.getElementById('content-management-section');
+    const toast = document.getElementById('toast-notification'); // Get the toast element
     
     let loggedInUser = null;
-    
-    // --- MOVED AND CORRECTED ---
-    // This object now lives in the top-level scope, so all functions share it.
-    let websiteData = {}; 
-    const scriptInput = document.getElementById('main-script');
-    const highlightingCheckbox = document.getElementById('enable-highlighting');
-    const gamesListContainer = document.getElementById('supported-games-list');
-    const creditsListContainer = document.getElementById('credits-list');
-    // --- END OF FIX ---
+    let websiteData = {}; // This now lives in the top-level scope
+
+    // --- Toast Notification Logic ---
+    let toastTimeout;
+    function showToast(message) {
+        clearTimeout(toastTimeout);
+        toast.textContent = message;
+        toast.classList.add('show');
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000); // Disappears after 3 seconds
+    }
 
     // --- Login Logic ---
     if (sessionStorage.getItem('loggedInUser')) {
@@ -47,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loginButton.addEventListener('click', () => {
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
         const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
-
         if (user) {
             loggedInUser = user;
             sessionStorage.setItem('loggedInUser', JSON.stringify(user));
@@ -66,21 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
         loadContentDataIntoForms();
     }
 
-    // --- Section Visibility and Rendering ---
-    function renderUserManagement() {
+    // --- Section Rendering ---
+    function renderUserManagement() { /* (This function is unchanged) */
         const role = loggedInUser.role;
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
-
         if (!canManageUsers) {
             userManagementSection.classList.add('hidden');
             return;
         }
-        
         userManagementSection.classList.remove('hidden');
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-
         userList.innerHTML = '<h4>Existing Users</h4>';
         users.forEach(user => {
             let deleteBtn = '';
@@ -91,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
         });
-
         roleSelect.innerHTML = '';
         if (role === ROLES.KAZUMA) {
             [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`);
@@ -99,44 +90,26 @@ document.addEventListener('DOMContentLoaded', () => {
             roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`;
         }
     }
-
-    function renderContentManagement() {
+    function renderContentManagement() { /* (This function is unchanged) */
         const role = loggedInUser.role;
         const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
-        if (canManageContent) {
-            contentManagementSection.classList.remove('hidden');
-        } else {
-            contentManagementSection.classList.add('hidden');
-        }
+        if (canManageContent) { contentManagementSection.classList.remove('hidden'); }
+        else { contentManagementSection.classList.add('hidden'); }
     }
 
-    // --- Event Listeners for User Management ---
-    document.getElementById('add-user-btn').addEventListener('click', () => {
-        const newUsername = document.getElementById('new-username').value;
-        const newPassword = document.getElementById('new-password').value;
-        const newRole = document.getElementById('new-user-role').value;
+    // --- User Management Events ---
+    document.getElementById('add-user-btn').addEventListener('click', () => { /* (This function is unchanged) */
+        const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
         const userError = document.getElementById('user-error-msg');
-        
-        if (!newUsername || !newPassword || !newRole) {
-            userError.textContent = 'All fields are required.';
-            userError.classList.remove('hidden');
-            return;
-        }
+        if (!newUsername || !newPassword || !newRole) { userError.textContent = 'All fields are required.'; userError.classList.remove('hidden'); return; }
         let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) {
-            userError.textContent = 'Username already exists.';
-            userError.classList.remove('hidden');
-            return;
-        }
+        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) { userError.textContent = 'Username already exists.'; userError.classList.remove('hidden'); return; }
         users.push({ username: newUsername, password: newPassword, role: newRole });
         localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
-        document.getElementById('new-username').value = '';
-        document.getElementById('new-password').value = '';
-        userError.classList.add('hidden');
-        renderUserManagement();
+        document.getElementById('new-username').value = ''; document.getElementById('new-password').value = '';
+        userError.classList.add('hidden'); renderUserManagement();
     });
-
-    document.getElementById('user-list').addEventListener('click', (e) => {
+    document.getElementById('user-list').addEventListener('click', (e) => { /* (This function is unchanged) */
         if (e.target.classList.contains('btn-delete')) {
             const usernameToDelete = e.target.dataset.username;
             if (confirm(`Are you sure you want to delete user: ${usernameToDelete}?`)) {
@@ -148,12 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Content Management Logic ---
+    // --- Content Management Logic (FIXED & IMPROVED) ---
+    const scriptInput = document.getElementById('main-script'), highlightingCheckbox = document.getElementById('enable-highlighting');
+    const gamesListContainer = document.getElementById('supported-games-list'), creditsListContainer = document.getElementById('credits-list');
+    
     function loadContentDataIntoForms() {
         const storedData = localStorage.getItem('nexusDevelopedData');
         const parsedData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
-        // IMPORTANT: We modify the shared websiteData object, not reassign it.
         Object.assign(websiteData, parsedData);
+        if (!websiteData.supportedGames) websiteData.supportedGames = []; // CRITICAL FIX for Add buttons
+        if (!websiteData.credits) websiteData.credits = []; // CRITICAL FIX for Add buttons
         
         scriptInput.value = websiteData.script || '';
         highlightingCheckbox.checked = websiteData.enableHighlighting !== false;
@@ -165,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
         websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' });
         renderGamesForm();
     });
-
     document.getElementById('add-credit-btn').addEventListener('click', () => {
         websiteData.credits.push({ name: '', image: '', role: '' });
         renderCreditsForm();
@@ -173,15 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     dashboardSection.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-item-btn')) {
-            const type = e.target.dataset.type;
-            const index = e.target.dataset.index;
-            if (type === 'game') {
-                websiteData.supportedGames.splice(index, 1);
-                renderGamesForm();
-            } else if (type === 'credit') {
-                websiteData.credits.splice(index, 1);
-                renderCreditsForm();
-            }
+            const type = e.target.dataset.type, index = e.target.dataset.index;
+            if (type === 'game') { websiteData.supportedGames.splice(index, 1); renderGamesForm(); }
+            else if (type === 'credit') { websiteData.credits.splice(index, 1); renderCreditsForm(); }
         }
     });
 
@@ -199,12 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
 
         localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
-        alert('Content saved successfully!');
+        showToast('Content saved successfully!'); // NEW: Replaced alert() with the toast
     });
 
-    function renderGamesForm() {
+    function renderGamesForm() { /* (This function is unchanged) */
         gamesListContainer.innerHTML = '';
-        if (!websiteData.supportedGames) websiteData.supportedGames = [];
         websiteData.supportedGames.forEach((game, index) => {
             const gameCard = document.createElement('div');
             gameCard.className = 'item-card';
@@ -218,9 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function renderCreditsForm() {
+    function renderCreditsForm() { /* (This function is unchanged) */
         creditsListContainer.innerHTML = '';
-        if (!websiteData.credits) websiteData.credits = [];
         websiteData.credits.forEach((credit, index) => {
             const creditCard = document.createElement('div');
             creditCard.className = 'item-card';
