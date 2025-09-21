@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('loggedInUser', JSON.stringify(user));
             showDashboard();
         } else {
+            errorMsg.textContent = "Invalid username or password.";
             errorMsg.classList.remove('hidden');
         }
     });
@@ -52,26 +53,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function showDashboard() {
         loginSection.classList.add('hidden');
         dashboardSection.classList.remove('hidden');
-        updateDashboardVisibility();
-        loadContentDataIntoForms();
+        
+        // Render sections based on the logged-in user's role
         renderUserManagement();
+        renderContentManagement();
+        
+        loadContentDataIntoForms();
     }
 
-    function updateDashboardVisibility() {
-        const role = loggedInUser.role;
-        // User management is visible to Kazuma, Owner, and Co-Owner
-        if ([ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role)) {
-            userManagementSection.classList.remove('hidden');
-        }
-        // Content management is visible to everyone (Dev and up)
-        if ([ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role)) {
-            contentManagementSection.classList.remove('hidden');
-        }
-    }
-
-    // --- User Management Logic ---
+    // --- Section Visibility and Rendering ---
     function renderUserManagement() {
-        if (![ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role)) return;
+        const role = loggedInUser.role;
+        const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
+
+        if (!canManageUsers) {
+            userManagementSection.classList.add('hidden'); // CRITICAL: Hide section for unauthorized users (like Devs)
+            return; // Stop here if user has no management permissions
+        }
+        
+        userManagementSection.classList.remove('hidden'); // Show section for authorized users
 
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
@@ -80,32 +80,47 @@ document.addEventListener('DOMContentLoaded', () => {
         userList.innerHTML = '<h4>Existing Users</h4>';
         users.forEach(user => {
             let deleteBtn = '';
-            // Permission checks for who can delete whom
-            if (loggedInUser.role === ROLES.KAZUMA && loggedInUser.username !== user.username) {
+            // Kazuma can delete anyone except himself
+            if (role === ROLES.KAZUMA && loggedInUser.username !== user.username) {
                 deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
-            } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role) && user.role === ROLES.DEV) {
+            } 
+            // Owners/Co-Owners can only delete Devs
+            else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) {
                 deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
             }
             userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
         });
 
-        // Populate role dropdown based on permissions
+        // Populate role dropdown based on creator's permissions
         roleSelect.innerHTML = '';
-        if (loggedInUser.role === ROLES.KAZUMA) {
+        if (role === ROLES.KAZUMA) {
             [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`);
-        } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(loggedInUser.role)) {
-            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`;
+        } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role)) {
+            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`; // Can only create Devs
         }
     }
 
+    function renderContentManagement() {
+        const role = loggedInUser.role;
+        // All logged-in roles can manage content
+        const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
+        if (canManageContent) {
+            contentManagementSection.classList.remove('hidden');
+        } else {
+            contentManagementSection.classList.add('hidden');
+        }
+    }
+
+
+    // --- Event Listeners for User Management ---
     document.getElementById('add-user-btn').addEventListener('click', () => {
         const newUsername = document.getElementById('new-username').value;
         const newPassword = document.getElementById('new-password').value;
         const newRole = document.getElementById('new-user-role').value;
         const userError = document.getElementById('user-error-msg');
         
-        if (!newUsername || !newPassword) {
-            userError.textContent = 'Username and Password cannot be empty.';
+        if (!newUsername || !newPassword || !newRole) {
+            userError.textContent = 'All fields are required.';
             userError.classList.remove('hidden');
             return;
         }
@@ -120,11 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
         users.push({ username: newUsername, password: newPassword, role: newRole });
         localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
         
-        // Clear form and rerender
         document.getElementById('new-username').value = '';
         document.getElementById('new-password').value = '';
         userError.classList.add('hidden');
-        renderUserManagement();
+        renderUserManagement(); // Re-render the list
     });
 
     document.getElementById('user-list').addEventListener('click', (e) => {
@@ -139,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Content Management Logic (largely the same as before, just with new IDs) ---
+    // --- Content Management Logic ---
     let websiteData = {};
     const scriptInput = document.getElementById('main-script');
     const highlightingCheckbox = document.getElementById('enable-highlighting');
@@ -154,11 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGamesForm();
         renderCreditsForm();
     }
-
-    function renderGamesForm() { /* Same as before, just uses item-card */ }
-    function renderCreditsForm() { /* Same as before, just uses item-card */ }
-    
-    // (The rendering functions are complex but unchanged in logic, so I'll put the full code below for copy-pasting)
     
     document.getElementById('add-game-btn').addEventListener('click', () => {
         websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' });
@@ -201,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Content saved successfully!');
     });
 
-    // --- Full render functions for copy-paste ---
     function renderGamesForm() {
         gamesListContainer.innerHTML = '';
         websiteData.supportedGames.forEach((game, index) => {
