@@ -1,6 +1,5 @@
-/* CSS Variables for easy theme management */
 :root {
-    --primary-color: #e50914; /* Netflix-like Red */
+    --primary-color: #e50914; 
     --dark-color: #121212;
     --light-dark-color: #1a1a1a;
     --text-color: #f5f5f5;
@@ -27,6 +26,16 @@ body {
     overflow-x: hidden;
 }
 
+/* Particle Background */
+#particles-js {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
 /* Main Container */
 .container {
     max-width: 1200px;
@@ -50,8 +59,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 90%;
-    margin: 0 auto;
 }
 
 .brand-title {
@@ -59,7 +66,6 @@ body {
     font-weight: 700;
     color: var(--primary-color);
     text-decoration: none;
-    font-family: 'Russo One', sans-serif;
 }
 
 .nav-links {
@@ -100,10 +106,11 @@ body {
     transition: all 0.3s ease-in-out;
 }
 
+
 /* Page Content Styling */
 .page {
     display: none;
-    padding-top: 100px; /* Offset for fixed header */
+    padding-top: 100px; 
     padding-bottom: 50px;
     min-height: 100vh;
     animation: fadeIn 0.5s ease-in-out;
@@ -141,23 +148,23 @@ body {
     margin-bottom: 2rem;
 }
 
-/* Script Container Styling */
+
 .script-container {
     background: var(--light-dark-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     width: 100%;
-    max-width: 800px;
+    max-width: 650px;
     margin-bottom: 1.5rem;
-    padding: 1rem;
-    position: relative;
-    text-align: left;
+    padding: 0.5rem; 
 }
 
-.script-container pre {
+.script-container pre[class*="language-"] {
+    background: transparent;
     margin: 0;
+    padding: 1rem;
+    border-radius: 6px;
     text-shadow: none;
-    padding-top: 2rem;
 }
 
 .btn {
@@ -180,19 +187,12 @@ body {
 }
 
 .btn-copy {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    background-color: #333;
-}
-.btn-copy.copied {
-    background: #1a4d2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-
-/* Supported & Credits Page */
+/* Supported Page */
 .section-title {
     text-align: center;
     font-size: 2.5rem;
@@ -200,7 +200,7 @@ body {
     color: white;
 }
 
-.grid {
+.game-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
@@ -213,8 +213,7 @@ body {
     text-decoration: none;
     color: var(--text-color);
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: block;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -224,38 +223,32 @@ body {
     box-shadow: 0 8px 30px rgba(229, 9, 20, 0.3);
 }
 
-.game-card-img {
+.game-card img {
     width: 100%;
     height: 180px;
     object-fit: cover;
     display: block;
+    transition: opacity 0.3s ease;
+}
+
+.game-card:hover img {
+    opacity: 0.5;
 }
 
 .game-card-content {
     padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
 }
 
 .game-card-content h3 {
     font-size: 1.2rem;
-    margin: 0 0 1rem 0;
+    margin: 0;
 }
 
-.game-card-status {
-    padding: 0.5rem;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 1rem;
-    font-weight: bold;
-}
-.status-working { background-color: rgba(42, 168, 83, 0.2); color: #2aa853; }
-.status-not-working { background-color: rgba(217, 48, 37, 0.2); color: #d93025; }
-
-.game-card .btn {
-    margin-top: auto;
-    width: 100%;
+/* Credits Page */
+.credits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
 }
 
 .credit-card {
@@ -292,7 +285,7 @@ body {
     color: var(--text-muted-color);
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .nav-links {
         display: none;
