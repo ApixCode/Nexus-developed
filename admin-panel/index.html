@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Russo+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
     <style>
-        /* --- (Existing styles are here) --- */
         .admin-container { max-width: 900px; margin: 100px auto 40px; padding: 2rem; background: var(--light-dark-color); border-radius: 8px; border: 1px solid var(--border-color); }
         .admin-form { display: flex; flex-direction: column; gap: 1.5rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -19,43 +18,56 @@
         h2 { font-family: 'Russo One', sans-serif; color: var(--primary-color); margin-bottom: 1rem; }
         .item-card { background: #2a2a2a; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; display: flex; flex-direction: column; gap: 1rem; }
         .error-msg { color: #ff5555; text-align: center; }
-        .hidden { display: none; }
         .btn-delete { background-color: #555; }
         .btn-delete:hover { background-color: #333; }
         .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid var(--border-color); }
-
-        /* --- NEW: Add these styles for the toast notification --- */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #2aa853; /* Success green */
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            z-index: 2000;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            font-weight: bold;
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        /* --- END OF NEW STYLES --- */
+        .toast { position: fixed; bottom: 20px; right: 20px; background-color: #2aa853; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 2000; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; }
+        .toast.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
     <div class="admin-container">
-        <!-- (The rest of your admin-container content is the same) -->
-        <!-- ... -->
+        <!-- LOGIN FORM -->
+        <div id="login-section">
+            <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Login</h1>
+            <div class="admin-form">
+                <div class="form-group"><label for="username">Username</label><input type="text" id="username"></div>
+                <div class="form-group"><label for="password">Password</label><input type="password" id="password"></div>
+                <button id="login-button" class="btn">Login</button>
+                <p id="error-msg" style="display: none;" class="error-msg">Invalid username or password.</p>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD (NOTE: class="hidden" has been REMOVED) -->
+        <div id="dashboard-section">
+            <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Dashboard</h1>
+            <div id="user-management-section" class="admin-section">
+                <h2>User Management</h2>
+                <div id="user-list"></div>
+                <div class="item-card" style="margin-top: 2rem;">
+                    <h4>Add New User</h4>
+                    <div class="form-group"><label>New Username</label><input type="text" id="new-username"></div>
+                    <div class="form-group"><label>New Password</label><input type="password" id="new-password"></div>
+                    <div class="form-group"><label>Role</label><select id="new-user-role"></select></div>
+                    <button id="add-user-btn" class="btn">Add User</button>
+                    <p id="user-error-msg" class="error-msg" style="display: none;"></p>
+                </div>
+            </div>
+            <div id="content-management-section">
+                <div class="admin-section">
+                    <h2>Home Page Script</h2>
+                    <div class="form-group"><label for="main-script">Script</label><textarea id="main-script"></textarea></div>
+                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="enable-highlighting" style="width: auto;"><label for="enable-highlighting">Enable Syntax Highlighting</label>
+                    </div>
+                </div>
+                <div class="admin-section"><h2>Supported Games</h2><div id="supported-games-list"></div><button id="add-game-btn" class="btn">+ Add Game</button></div>
+                <div class="admin-section"><h2>Credits Page</h2><div id="credits-list"></div><button id="add-credit-btn" class="btn">+ Add Credit</button></div>
+                <button id="save-all-btn" class="btn">Save All Content Changes</button>
+            </div>
+        </div>
     </div>
-
-    <!-- NEW: Add this div right before the closing </body> tag -->
     <div id="toast-notification" class="toast"></div>
-
     <script src="admin.js"></script>
 </body>
 </html>
