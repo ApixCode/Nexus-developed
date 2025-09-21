@@ -24,11 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const errorMsg = document.getElementById('error-msg');
-
     const userManagementSection = document.getElementById('user-management-section');
     const contentManagementSection = document.getElementById('content-management-section');
     
     let loggedInUser = null;
+    
+    // --- MOVED AND CORRECTED ---
+    // This object now lives in the top-level scope, so all functions share it.
+    let websiteData = {}; 
+    const scriptInput = document.getElementById('main-script');
+    const highlightingCheckbox = document.getElementById('enable-highlighting');
+    const gamesListContainer = document.getElementById('supported-games-list');
+    const creditsListContainer = document.getElementById('credits-list');
+    // --- END OF FIX ---
 
     // --- Login Logic ---
     if (sessionStorage.getItem('loggedInUser')) {
@@ -53,11 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showDashboard() {
         loginSection.classList.add('hidden');
         dashboardSection.classList.remove('hidden');
-        
-        // Render sections based on the logged-in user's role
         renderUserManagement();
         renderContentManagement();
-        
         loadContentDataIntoForms();
     }
 
@@ -67,12 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
 
         if (!canManageUsers) {
-            userManagementSection.classList.add('hidden'); // CRITICAL: Hide section for unauthorized users (like Devs)
-            return; // Stop here if user has no management permissions
+            userManagementSection.classList.add('hidden');
+            return;
         }
         
-        userManagementSection.classList.remove('hidden'); // Show section for authorized users
-
+        userManagementSection.classList.remove('hidden');
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
@@ -80,29 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
         userList.innerHTML = '<h4>Existing Users</h4>';
         users.forEach(user => {
             let deleteBtn = '';
-            // Kazuma can delete anyone except himself
             if (role === ROLES.KAZUMA && loggedInUser.username !== user.username) {
                 deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
-            } 
-            // Owners/Co-Owners can only delete Devs
-            else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) {
+            } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) {
                 deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
             }
             userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
         });
 
-        // Populate role dropdown based on creator's permissions
         roleSelect.innerHTML = '';
         if (role === ROLES.KAZUMA) {
             [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`);
         } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role)) {
-            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`; // Can only create Devs
+            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`;
         }
     }
 
     function renderContentManagement() {
         const role = loggedInUser.role;
-        // All logged-in roles can manage content
         const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
         if (canManageContent) {
             contentManagementSection.classList.remove('hidden');
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
             contentManagementSection.classList.add('hidden');
         }
     }
-
 
     // --- Event Listeners for User Management ---
     document.getElementById('add-user-btn').addEventListener('click', () => {
@@ -124,21 +122,18 @@ document.addEventListener('DOMContentLoaded', () => {
             userError.classList.remove('hidden');
             return;
         }
-
         let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
         if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) {
             userError.textContent = 'Username already exists.';
             userError.classList.remove('hidden');
             return;
         }
-        
         users.push({ username: newUsername, password: newPassword, role: newRole });
         localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
-        
         document.getElementById('new-username').value = '';
         document.getElementById('new-password').value = '';
         userError.classList.add('hidden');
-        renderUserManagement(); // Re-render the list
+        renderUserManagement();
     });
 
     document.getElementById('user-list').addEventListener('click', (e) => {
@@ -154,15 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Content Management Logic ---
-    let websiteData = {};
-    const scriptInput = document.getElementById('main-script');
-    const highlightingCheckbox = document.getElementById('enable-highlighting');
-    const gamesListContainer = document.getElementById('supported-games-list');
-    const creditsListContainer = document.getElementById('credits-list');
-
     function loadContentDataIntoForms() {
         const storedData = localStorage.getItem('nexusDevelopedData');
-        websiteData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
+        const parsedData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
+        // IMPORTANT: We modify the shared websiteData object, not reassign it.
+        Object.assign(websiteData, parsedData);
+        
         scriptInput.value = websiteData.script || '';
         highlightingCheckbox.checked = websiteData.enableHighlighting !== false;
         renderGamesForm();
@@ -212,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderGamesForm() {
         gamesListContainer.innerHTML = '';
+        if (!websiteData.supportedGames) websiteData.supportedGames = [];
         websiteData.supportedGames.forEach((game, index) => {
             const gameCard = document.createElement('div');
             gameCard.className = 'item-card';
@@ -227,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderCreditsForm() {
         creditsListContainer.innerHTML = '';
+        if (!websiteData.credits) websiteData.credits = [];
         websiteData.credits.forEach((credit, index) => {
             const creditCard = document.createElement('div');
             creditCard.className = 'item-card';
