@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Russo+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
     <style>
-        /* --- Base Admin Styles --- */
         .admin-container { max-width: 900px; margin: 100px auto 40px; padding: 2rem; background: var(--light-dark-color); border-radius: 8px; border: 1px solid var(--border-color); }
         .admin-form { display: flex; flex-direction: column; gap: 1.5rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -21,72 +20,20 @@
         .btn-delete { background-color: #555; }
         .btn-delete:hover { background-color: #333; }
         .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid var(--border-color); }
-        
-        /* --- Toast Notification Styles --- */
         .toast { position: fixed; bottom: 20px; right: 20px; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 2000; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; }
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.success { background-color: #2aa853; }
         .toast.info { background-color: #0d6efd; }
         .toast.error { background-color: var(--primary-color); }
-
-        /* --- NEW: Header for Dashboard --- */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        #logout-btn {
-            width: auto;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            background-color: #444;
-        }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        #logout-btn { width: auto; padding: 8px 16px; font-size: 0.9rem; background-color: #444; }
+        .io-buttons { display: flex; gap: 1rem; margin-top: 1rem; }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <!-- LOGIN FORM -->
-        <div id="login-section">
-            <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Login</h1>
-            <div class="admin-form">
-                <div class="form-group"><label for="username">Username</label><input type="text" id="username"></div>
-                <div class="form-group"><label for="password">Password</label><input type="password" id="password"></div>
-                <button id="login-button" class="btn">Login</button>
-            </div>
-        </div>
+    <!-- The container will now be populated by JavaScript -->
+    <div id="app-root"></div>
 
-        <!-- ADMIN DASHBOARD -->
-        <div id="dashboard-section">
-            <div class="dashboard-header">
-                <h1 class="brand-title" style="font-size: 2.5rem; margin-bottom: 0;">Admin Dashboard</h1>
-                <button id="logout-btn" class="btn">Logout</button>
-            </div>
-            <div id="user-management-section" class="admin-section">
-                <h2>User Management</h2><div id="user-list"></div>
-                <div class="item-card" style="margin-top: 2rem;">
-                    <h4>Add New User</h4>
-                    <div class="form-group"><label>New Username</label><input type="text" id="new-username"></div>
-                    <div class="form-group"><label>New Password</label><input type="password" id="new-password"></div>
-                    <div class="form-group"><label>Role</label><select id="new-user-role"></select></div>
-                    <button id="add-user-btn" class="btn">Add User</button>
-                    <p id="user-error-msg" class="error-msg" style="display: none;"></p>
-                </div>
-            </div>
-            <div id="content-management-section">
-                <div class="admin-section">
-                    <h2>Home Page Script</h2>
-                    <div class="form-group"><label for="main-script">Script</label><textarea id="main-script"></textarea></div>
-                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="enable-highlighting" style="width: auto;"><label for="enable-highlighting">Enable Syntax Highlighting</label>
-                    </div>
-                </div>
-                <div class="admin-section"><h2>Supported Games</h2><div id="supported-games-list"></div><button id="add-game-btn" class="btn">+ Add Game</button></div>
-                <div class="admin-section"><h2>Credits Page</h2><div id="credits-list"></div><button id="add-credit-btn" class="btn">+ Add Credit</button></div>
-                <button id="save-all-btn" class="btn">Save All Content Changes</button>
-            </div>
-        </div>
-    </div>
     <div id="toast-notification" class="toast"></div>
     <script src="admin.js"></script>
 </body>
