@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginButton = document.getElementById('login-button');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
-    const passwordToggle = document.getElementById('password-toggle-icon');
+    // REMOVED: const passwordToggle = document.getElementById('password-toggle-icon');
     const userManagementSection = document.getElementById('user-management-section');
     const contentManagementSection = document.getElementById('content-management-section');
     const toast = document.getElementById('toast-notification');
@@ -51,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardSection.style.display = 'none';
     }
     
-    // --- ALL FUNCTION DEFINITIONS (COMPLETE AND UNABRIDGED) ---
-
+    // --- All Function Definitions ---
     function renderUserManagement() {
         const role = loggedInUser.role;
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
         userManagementSection.style.display = canManageUsers ? 'block' : 'none';
         if (!canManageUsers) return;
-
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
@@ -69,18 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
             else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) { deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`; }
             userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
         });
-
         roleSelect.innerHTML = '';
         if (role === ROLES.KAZUMA) { [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`); }
         else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role)) { roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`; }
     }
-
     function renderContentManagement() {
         const role = loggedInUser.role;
         const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
         contentManagementSection.style.display = canManageContent ? 'block' : 'none';
     }
-
     function loadContentDataIntoForms() {
         const storedData = localStorage.getItem('nexusDevelopedData');
         const parsedData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
@@ -92,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGamesForm();
         renderCreditsForm();
     }
-
     function renderGamesForm() {
         gamesListContainer.innerHTML = '';
         websiteData.supportedGames.forEach((game, index) => {
@@ -102,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gamesListContainer.appendChild(gameCard);
         });
     }
-
     function renderCreditsForm() {
         creditsListContainer.innerHTML = '';
         websiteData.credits.forEach((credit, index) => {
@@ -114,30 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- INITIALIZATION AND EVENT LISTENERS ---
-
-    // Initial check: Are we already logged in?
-    try {
-        const storedUser = sessionStorage.getItem('loggedInUser');
-        if (storedUser) {
-            loggedInUser = JSON.parse(storedUser);
-            showDashboard();
-        } else {
-            showLogin();
-        }
-    } catch (error) {
-        console.error("Failed to parse session storage user:", error);
-        sessionStorage.removeItem('loggedInUser');
+    if (sessionStorage.getItem('loggedInUser')) {
+        loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
+        showDashboard();
+    } else {
         showLogin();
     }
     
-    // Attach Password Toggle Event Listener
-    passwordToggle.addEventListener('click', () => {
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
-        passwordToggle.textContent = isPassword ? '🙈' : '👁️';
-    });
-
-    // Attach Login Button Event Listener
     loginButton.addEventListener('click', () => {
         showToast('Logging in...', 'info');
         setTimeout(() => {
@@ -153,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     });
 
-    // Attach User Management Event Listeners
     document.getElementById('add-user-btn').addEventListener('click', () => {
         const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
         const userError = document.getElementById('user-error-msg');
@@ -177,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Attach Content Management Event Listeners
     document.getElementById('add-game-btn').addEventListener('click', () => { websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' }); renderGamesForm(); });
     document.getElementById('add-credit-btn').addEventListener('click', () => { websiteData.credits.push({ name: '', image: '', role: '' }); renderCreditsForm(); });
     dashboardSection.addEventListener('click', (e) => {
