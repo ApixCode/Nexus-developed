@@ -22,25 +22,6 @@
         .btn-delete:hover { background-color: #333; }
         .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid var(--border-color); }
         
-        /* --- NEW: Password Toggle Styles --- */
-        .password-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        #password {
-            padding-right: 45px; /* Make space for the icon */
-        }
-        #password-toggle-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: var(--text-muted-color);
-            user-select: none;
-        }
-        
         /* --- Toast Notification Styles --- */
         .toast { position: fixed; bottom: 20px; right: 20px; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 2000; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; }
         .toast.show { opacity: 1; transform: translateY(0); }
@@ -56,13 +37,9 @@
             <h1 class="brand-title" style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Admin Login</h1>
             <div class="admin-form">
                 <div class="form-group"><label for="username">Username</label><input type="text" id="username"></div>
-                <!-- NEW: Password field is now wrapped for the icon -->
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password">
-                        <span id="password-toggle-icon">👁️</span>
-                    </div>
+                    <input type="password" id="password">
                 </div>
                 <button id="login-button" class="btn">Login</button>
             </div>
