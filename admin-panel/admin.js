@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginButton = document.getElementById('login-button');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
-    const errorMsg = document.getElementById('error-msg');
+    const passwordToggle = document.getElementById('password-toggle-icon');
     const userManagementSection = document.getElementById('user-management-section');
     const contentManagementSection = document.getElementById('content-management-section');
     const toast = document.getElementById('toast-notification');
@@ -29,85 +29,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Toast Notification Logic ---
     let toastTimeout;
-    function showToast(message) {
+    function showToast(message, type = 'success') { // type can be 'success', 'info', or 'error'
         clearTimeout(toastTimeout);
         toast.textContent = message;
-        toast.classList.add('show');
+        toast.className = 'toast show'; // Reset classes
+        toast.classList.add(type); // Add type class for color
         toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
     // --- Login & Visibility Control ---
     function showDashboard() {
-        loginSection.style.display = 'none'; // Force hide login
-        dashboardSection.style.display = 'block'; // Force show dashboard
+        loginSection.style.display = 'none';
+        dashboardSection.style.display = 'block';
         renderUserManagement();
         renderContentManagement();
         loadContentDataIntoForms();
     }
 
     function showLogin() {
-        loginSection.style.display = 'block'; // Force show login
-        dashboardSection.style.display = 'none'; // Force hide dashboard
+        loginSection.style.display = 'block';
+        dashboardSection.style.display = 'none';
     }
 
-    // Initial check: Are we already logged in?
     if (sessionStorage.getItem('loggedInUser')) {
         loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
         showDashboard();
     } else {
-        // If not logged in, guarantee the login form is visible.
         showLogin();
     }
 
+    // --- NEW: Password Visibility Toggle ---
+    passwordToggle.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        passwordToggle.textContent = isPassword ? '🙈' : '👁️';
+    });
+
+    // --- FIXED: Login Button Logic ---
     loginButton.addEventListener('click', () => {
-        const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-        const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
-        if (user) {
-            loggedInUser = user;
-            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-            showDashboard();
-        } else {
-            errorMsg.textContent = "Invalid username or password.";
-            errorMsg.style.display = 'block';
-        }
+        showToast('Logging in...', 'info');
+        // Use a short timeout for better UX, allowing the "Logging in..." toast to be seen
+        setTimeout(() => {
+            const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+            const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
+            
+            if (user) {
+                loggedInUser = user;
+                sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+                showDashboard();
+            } else {
+                showToast('Incorrect username or password.', 'error');
+            }
+        }, 500); // 0.5 second delay
     });
     
     // --- Section Rendering ---
+    function renderUserManagement() { /* Unchanged */ }
+    function renderContentManagement() { /* Unchanged */ }
+
+    // --- User Management Events ---
+    document.getElementById('add-user-btn').addEventListener('click', () => { /* Unchanged */ });
+    document.getElementById('user-list').addEventListener('click', (e) => { /* Unchanged */ });
+
+    // --- Content Management Logic ---
+    function loadContentDataIntoForms() { /* Unchanged */ }
+    document.getElementById('add-game-btn').addEventListener('click', () => { /* Unchanged */ });
+    document.getElementById('add-credit-btn').addEventListener('click', () => { /* Unchanged */ });
+    dashboardSection.addEventListener('click', (e) => { /* Unchanged */ });
+    document.getElementById('save-all-btn').addEventListener('click', () => {
+        // Updated to use new toast function
+        websiteData.script = scriptInput.value;
+        websiteData.enableHighlighting = highlightingCheckbox.checked;
+        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({ name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value, redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value }));
+        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({ name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value, role: card.querySelector('.credit-role').value }));
+        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
+        showToast('Content saved successfully!', 'success');
+    });
+
+    function renderGamesForm() { /* Unchanged */ }
+    function renderCreditsForm() { /* Unchanged */ }
+
+
+    // --- Full Functions (unchanged logic, just for completeness) ---
     function renderUserManagement() {
         const role = loggedInUser.role;
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
-        
-        userManagementSection.style.display = canManageUsers ? 'block' : 'none'; // Direct visibility control
+        userManagementSection.style.display = canManageUsers ? 'block' : 'none';
         if (!canManageUsers) return;
-
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
         userList.innerHTML = '<h4>Existing Users</h4>';
         users.forEach(user => {
             let deleteBtn = '';
-            if (role === ROLES.KAZUMA && loggedInUser.username !== user.username) {
-                deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
-            } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) {
-                deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`;
-            }
+            if (role === ROLES.KAZUMA && loggedInUser.username !== user.username) { deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`; }
+            else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role) && user.role === ROLES.DEV) { deleteBtn = `<button class="btn btn-delete btn-sm" data-username="${user.username}">Delete</button>`; }
             userList.innerHTML += `<div class="user-list-item"><span>${user.username} (<em>${user.role}</em>)</span> ${deleteBtn}</div>`;
         });
         roleSelect.innerHTML = '';
-        if (role === ROLES.KAZUMA) {
-            [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`);
-        } else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role)) {
-            roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`;
-        }
+        if (role === ROLES.KAZUMA) { [ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].forEach(r => roleSelect.innerHTML += `<option value="${r}">${r}</option>`); }
+        else if ([ROLES.OWNER, ROLES.CO_OWNER].includes(role)) { roleSelect.innerHTML = `<option value="${ROLES.DEV}">${ROLES.DEV}</option>`; }
     }
-
     function renderContentManagement() {
         const role = loggedInUser.role;
         const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
-        contentManagementSection.style.display = canManageContent ? 'block' : 'none'; // Direct visibility control
+        contentManagementSection.style.display = canManageContent ? 'block' : 'none';
     }
-
-    // --- User Management Events ---
     document.getElementById('add-user-btn').addEventListener('click', () => {
         const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
         const userError = document.getElementById('user-error-msg');
@@ -119,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new-username').value = ''; document.getElementById('new-password').value = '';
         userError.style.display = 'none'; renderUserManagement();
     });
-
     document.getElementById('user-list').addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-delete')) {
             const usernameToDelete = e.target.dataset.username;
@@ -131,8 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    // --- Content Management Logic ---
     function loadContentDataIntoForms() {
         const storedData = localStorage.getItem('nexusDevelopedData');
         const parsedData = storedData ? JSON.parse(storedData) : { script: '', enableHighlighting: true, supportedGames: [], credits: [] };
@@ -144,17 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGamesForm();
         renderCreditsForm();
     }
-    
-    document.getElementById('add-game-btn').addEventListener('click', () => {
-        websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' });
-        renderGamesForm();
-    });
-
-    document.getElementById('add-credit-btn').addEventListener('click', () => {
-        websiteData.credits.push({ name: '', image: '', role: '' });
-        renderCreditsForm();
-    });
-    
+    document.getElementById('add-game-btn').addEventListener('click', () => { websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' }); renderGamesForm(); });
+    document.getElementById('add-credit-btn').addEventListener('click', () => { websiteData.credits.push({ name: '', image: '', role: '' }); renderCreditsForm(); });
     dashboardSection.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-item-btn')) {
             const type = e.target.dataset.type, index = e.target.dataset.index;
@@ -162,16 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (type === 'credit') { websiteData.credits.splice(index, 1); renderCreditsForm(); }
         }
     });
-
-    document.getElementById('save-all-btn').addEventListener('click', () => {
-        websiteData.script = scriptInput.value;
-        websiteData.enableHighlighting = highlightingCheckbox.checked;
-        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({ name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value, redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value }));
-        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({ name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value, role: card.querySelector('.credit-role').value }));
-        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
-        showToast('Content saved successfully!');
-    });
-
     function renderGamesForm() {
         gamesListContainer.innerHTML = '';
         websiteData.supportedGames.forEach((game, index) => {
@@ -181,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gamesListContainer.appendChild(gameCard);
         });
     }
-    
     function renderCreditsForm() {
         creditsListContainer.innerHTML = '';
         websiteData.credits.forEach((credit, index) => {
