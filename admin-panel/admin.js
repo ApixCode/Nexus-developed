@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginSection = document.getElementById('login-section');
     const dashboardSection = document.getElementById('dashboard-section');
     const loginButton = document.getElementById('login-button');
+    const logoutButton = document.getElementById('logout-btn');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
-    // REMOVED: const passwordToggle = document.getElementById('password-toggle-icon');
     const userManagementSection = document.getElementById('user-management-section');
     const contentManagementSection = document.getElementById('content-management-section');
     const toast = document.getElementById('toast-notification');
@@ -37,21 +37,114 @@ document.addEventListener('DOMContentLoaded', () => {
         toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
-    // --- Login & Visibility Control ---
-    function showDashboard() {
-        loginSection.style.display = 'none';
-        dashboardSection.style.display = 'block';
-        renderUserManagement();
-        renderContentManagement();
-        loadContentDataIntoForms();
+    // --- Core Navigation and State Management ---
+    function isLoggedIn() {
+        const user = sessionStorage.getItem('loggedInUser');
+        if (user) {
+            loggedInUser = JSON.parse(user);
+            return true;
+        }
+        loggedInUser = null;
+        return false;
     }
 
-    function showLogin() {
-        loginSection.style.display = 'block';
-        dashboardSection.style.display = 'none';
+    function handleNavigation() {
+        const hash = window.location.hash;
+        if (hash === '#dashboard' && isLoggedIn()) {
+            loginSection.style.display = 'none';
+            dashboardSection.style.display = 'block';
+            renderUserManagement();
+            renderContentManagement();
+            loadContentDataIntoForms();
+        } else {
+            loginSection.style.display = 'block';
+            dashboardSection.style.display = 'none';
+            // Clean up URL if trying to access dashboard without being logged in
+            if (hash === '#dashboard') {
+                window.location.hash = '';
+            }
+        }
     }
+
+    // --- All Function Definitions (These are safe and correct) ---
+    function renderUserManagement() { /* ... full function below ... */ }
+    function renderContentManagement() { /* ... full function below ... */ }
+    function loadContentDataIntoForms() { /* ... full function below ... */ }
+    function renderGamesForm() { /* ... full function below ... */ }
+    function renderCreditsForm() { /* ... full function below ... */ }
+
+    // --- EVENT LISTENERS (Guaranteed to work now) ---
+    loginButton.addEventListener('click', () => {
+        showToast('Logging in...', 'info');
+        setTimeout(() => {
+            const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+            const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
+            if (user) {
+                sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+                window.location.hash = '#dashboard'; // THE "REDIRECT"
+            } else {
+                showToast('Incorrect username or password.', 'error');
+            }
+        }, 500);
+    });
+
+    logoutButton.addEventListener('click', () => {
+        sessionStorage.removeItem('loggedInUser');
+        loggedInUser = null;
+        showToast('Logged out successfully.', 'info');
+        window.location.hash = ''; // Go back to login page
+    });
+
+    document.getElementById('add-user-btn').addEventListener('click', () => {
+        const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
+        const userError = document.getElementById('user-error-msg');
+        if (!newUsername || !newPassword || !newRole) { userError.textContent = 'All fields are required.'; userError.style.display = 'block'; return; }
+        let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) { userError.textContent = 'Username already exists.'; userError.style.display = 'block'; return; }
+        users.push({ username: newUsername, password: newPassword, role: newRole });
+        localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
+        document.getElementById('new-username').value = ''; document.getElementById('new-password').value = '';
+        userError.style.display = 'none'; renderUserManagement();
+    });
     
-    // --- All Function Definitions ---
+    document.getElementById('user-list').addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-delete')) {
+            const usernameToDelete = e.target.dataset.username;
+            if (confirm(`Are you sure you want to delete user: ${usernameToDelete}?`)) {
+                let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
+                users = users.filter(u => u.username !== usernameToDelete);
+                localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
+                renderUserManagement();
+            }
+        }
+    });
+
+    document.getElementById('add-game-btn').addEventListener('click', () => { websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' }); renderGamesForm(); });
+    document.getElementById('add-credit-btn').addEventListener('click', () => { websiteData.credits.push({ name: '', image: '', role: '' }); renderCreditsForm(); });
+    
+    dashboardSection.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-item-btn')) {
+            const type = e.target.dataset.type, index = e.target.dataset.index;
+            if (type === 'game') { websiteData.supportedGames.splice(index, 1); renderGamesForm(); }
+            else if (type === 'credit') { websiteData.credits.splice(index, 1); renderCreditsForm(); }
+        }
+    });
+    
+    document.getElementById('save-all-btn').addEventListener('click', () => {
+        websiteData.script = scriptInput.value;
+        websiteData.enableHighlighting = highlightingCheckbox.checked;
+        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({ name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value, redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value }));
+        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({ name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value, role: card.querySelector('.credit-role').value }));
+        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
+        showToast('Content saved successfully!', 'success');
+    });
+
+    // Listen for hash changes to navigate between login/dashboard
+    window.addEventListener('hashchange', handleNavigation);
+    // Initial page load navigation
+    handleNavigation();
+
+    // --- Full Function Definitions (for completeness) ---
     function renderUserManagement() {
         const role = loggedInUser.role;
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
@@ -105,68 +198,4 @@ document.addEventListener('DOMContentLoaded', () => {
             creditsListContainer.appendChild(creditCard);
         });
     }
-
-    // --- INITIALIZATION AND EVENT LISTENERS ---
-    if (sessionStorage.getItem('loggedInUser')) {
-        loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
-        showDashboard();
-    } else {
-        showLogin();
-    }
-    
-    loginButton.addEventListener('click', () => {
-        showToast('Logging in...', 'info');
-        setTimeout(() => {
-            const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-            const user = users.find(u => u.username.toLowerCase() === usernameInput.value.toLowerCase() && u.password === passwordInput.value);
-            if (user) {
-                loggedInUser = user;
-                sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-                showDashboard();
-            } else {
-                showToast('Incorrect username or password.', 'error');
-            }
-        }, 500);
-    });
-
-    document.getElementById('add-user-btn').addEventListener('click', () => {
-        const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
-        const userError = document.getElementById('user-error-msg');
-        if (!newUsername || !newPassword || !newRole) { userError.textContent = 'All fields are required.'; userError.style.display = 'block'; return; }
-        let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) { userError.textContent = 'Username already exists.'; userError.style.display = 'block'; return; }
-        users.push({ username: newUsername, password: newPassword, role: newRole });
-        localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
-        document.getElementById('new-username').value = ''; document.getElementById('new-password').value = '';
-        userError.style.display = 'none'; renderUserManagement();
-    });
-    document.getElementById('user-list').addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-delete')) {
-            const usernameToDelete = e.target.dataset.username;
-            if (confirm(`Are you sure you want to delete user: ${usernameToDelete}?`)) {
-                let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-                users = users.filter(u => u.username !== usernameToDelete);
-                localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
-                renderUserManagement();
-            }
-        }
-    });
-
-    document.getElementById('add-game-btn').addEventListener('click', () => { websiteData.supportedGames.push({ name: '', image: '', redirection: '', status: 'working' }); renderGamesForm(); });
-    document.getElementById('add-credit-btn').addEventListener('click', () => { websiteData.credits.push({ name: '', image: '', role: '' }); renderCreditsForm(); });
-    dashboardSection.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-item-btn')) {
-            const type = e.target.dataset.type, index = e.target.dataset.index;
-            if (type === 'game') { websiteData.supportedGames.splice(index, 1); renderGamesForm(); }
-            else if (type === 'credit') { websiteData.credits.splice(index, 1); renderCreditsForm(); }
-        }
-    });
-    document.getElementById('save-all-btn').addEventListener('click', () => {
-        websiteData.script = scriptInput.value;
-        websiteData.enableHighlighting = highlightingCheckbox.checked;
-        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({ name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value, redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value }));
-        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({ name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value, role: card.querySelector('.credit-role').value }));
-        localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
-        showToast('Content saved successfully!', 'success');
-    });
 });
