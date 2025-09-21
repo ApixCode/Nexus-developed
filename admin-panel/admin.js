@@ -9,8 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     initializeUsers();
 
-    // --- CONSOLIDATED DOM ELEMENTS (THE FIX) ---
-    // All element declarations are now at the top to prevent loading errors.
+    // --- DOM Elements ---
     const loginSection = document.getElementById('login-section');
     const dashboardSection = document.getElementById('dashboard-section');
     const loginButton = document.getElementById('login-button');
@@ -26,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const creditsListContainer = document.getElementById('credits-list');
     
     let loggedInUser = null;
-    let websiteData = {}; // Global data object for content
+    let websiteData = {};
 
     // --- Toast Notification Logic ---
     let toastTimeout;
@@ -34,15 +33,30 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(toastTimeout);
         toast.textContent = message;
         toast.classList.add('show');
-        toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
-    // --- Login Logic ---
+    // --- Login & Visibility Control ---
+    function showDashboard() {
+        loginSection.style.display = 'none'; // Force hide login
+        dashboardSection.style.display = 'block'; // Force show dashboard
+        renderUserManagement();
+        renderContentManagement();
+        loadContentDataIntoForms();
+    }
+
+    function showLogin() {
+        loginSection.style.display = 'block'; // Force show login
+        dashboardSection.style.display = 'none'; // Force hide dashboard
+    }
+
+    // Initial check: Are we already logged in?
     if (sessionStorage.getItem('loggedInUser')) {
         loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
         showDashboard();
+    } else {
+        // If not logged in, guarantee the login form is visible.
+        showLogin();
     }
 
     loginButton.addEventListener('click', () => {
@@ -54,27 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
             showDashboard();
         } else {
             errorMsg.textContent = "Invalid username or password.";
-            errorMsg.classList.remove('hidden');
+            errorMsg.style.display = 'block';
         }
     });
-
-    function showDashboard() {
-        loginSection.classList.add('hidden');
-        dashboardSection.classList.remove('hidden');
-        renderUserManagement();
-        renderContentManagement();
-        loadContentDataIntoForms();
-    }
-
+    
     // --- Section Rendering ---
     function renderUserManagement() {
         const role = loggedInUser.role;
         const canManageUsers = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER].includes(role);
-        if (!canManageUsers) {
-            userManagementSection.classList.add('hidden');
-            return;
-        }
-        userManagementSection.classList.remove('hidden');
+        
+        userManagementSection.style.display = canManageUsers ? 'block' : 'none'; // Direct visibility control
+        if (!canManageUsers) return;
+
         const userList = document.getElementById('user-list');
         const roleSelect = document.getElementById('new-user-role');
         const users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
@@ -99,36 +104,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderContentManagement() {
         const role = loggedInUser.role;
         const canManageContent = [ROLES.KAZUMA, ROLES.OWNER, ROLES.CO_OWNER, ROLES.DEV].includes(role);
-        if (canManageContent) {
-            contentManagementSection.classList.remove('hidden');
-        } else {
-            contentManagementSection.classList.add('hidden');
-        }
+        contentManagementSection.style.display = canManageContent ? 'block' : 'none'; // Direct visibility control
     }
 
     // --- User Management Events ---
     document.getElementById('add-user-btn').addEventListener('click', () => {
-        const newUsername = document.getElementById('new-username').value,
-            newPassword = document.getElementById('new-password').value,
-            newRole = document.getElementById('new-user-role').value;
+        const newUsername = document.getElementById('new-username').value, newPassword = document.getElementById('new-password').value, newRole = document.getElementById('new-user-role').value;
         const userError = document.getElementById('user-error-msg');
-        if (!newUsername || !newPassword || !newRole) {
-            userError.textContent = 'All fields are required.';
-            userError.classList.remove('hidden');
-            return;
-        }
+        if (!newUsername || !newPassword || !newRole) { userError.textContent = 'All fields are required.'; userError.style.display = 'block'; return; }
         let users = JSON.parse(localStorage.getItem('nexusDevelopedUsers'));
-        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) {
-            userError.textContent = 'Username already exists.';
-            userError.classList.remove('hidden');
-            return;
-        }
+        if (users.some(u => u.username.toLowerCase() === newUsername.toLowerCase())) { userError.textContent = 'Username already exists.'; userError.style.display = 'block'; return; }
         users.push({ username: newUsername, password: newPassword, role: newRole });
         localStorage.setItem('nexusDevelopedUsers', JSON.stringify(users));
-        document.getElementById('new-username').value = '';
-        document.getElementById('new-password').value = '';
-        userError.classList.add('hidden');
-        renderUserManagement();
+        document.getElementById('new-username').value = ''; document.getElementById('new-password').value = '';
+        userError.style.display = 'none'; renderUserManagement();
     });
 
     document.getElementById('user-list').addEventListener('click', (e) => {
@@ -168,32 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     dashboardSection.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-item-btn')) {
-            const type = e.target.dataset.type,
-                index = e.target.dataset.index;
-            if (type === 'game') {
-                websiteData.supportedGames.splice(index, 1);
-                renderGamesForm();
-            } else if (type === 'credit') {
-                websiteData.credits.splice(index, 1);
-                renderCreditsForm();
-            }
+            const type = e.target.dataset.type, index = e.target.dataset.index;
+            if (type === 'game') { websiteData.supportedGames.splice(index, 1); renderGamesForm(); }
+            else if (type === 'credit') { websiteData.credits.splice(index, 1); renderCreditsForm(); }
         }
     });
 
     document.getElementById('save-all-btn').addEventListener('click', () => {
         websiteData.script = scriptInput.value;
         websiteData.enableHighlighting = highlightingCheckbox.checked;
-        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({
-            name: card.querySelector('.game-name').value,
-            image: card.querySelector('.game-image').value,
-            redirection: card.querySelector('.game-redirection').value,
-            status: card.querySelector('.game-status').value,
-        }));
-        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({
-            name: card.querySelector('.credit-name').value,
-            image: card.querySelector('.credit-image').value,
-            role: card.querySelector('.credit-role').value,
-        }));
+        websiteData.supportedGames = Array.from(document.querySelectorAll('#supported-games-list .item-card')).map(card => ({ name: card.querySelector('.game-name').value, image: card.querySelector('.game-image').value, redirection: card.querySelector('.game-redirection').value, status: card.querySelector('.game-status').value }));
+        websiteData.credits = Array.from(document.querySelectorAll('#credits-list .item-card')).map(card => ({ name: card.querySelector('.credit-name').value, image: card.querySelector('.credit-image').value, role: card.querySelector('.credit-role').value }));
         localStorage.setItem('nexusDevelopedData', JSON.stringify(websiteData));
         showToast('Content saved successfully!');
     });
@@ -203,12 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         websiteData.supportedGames.forEach((game, index) => {
             const gameCard = document.createElement('div');
             gameCard.className = 'item-card';
-            gameCard.innerHTML = `<h4>Game #${index + 1}</h4>
-                <div class="form-group"><label>Name</label><input type="text" class="game-name" value="${game.name || ''}"></div>
-                <div class="form-group"><label>Image URL</label><input type="text" class="game-image" value="${game.image || ''}"></div>
-                <div class="form-group"><label>Game Redirection URL</label><input type="text" class="game-redirection" value="${game.redirection || ''}"></div>
-                <div class="form-group"><label>Status</label><select class="game-status"><option value="working" ${game.status === 'working' ? 'selected' : ''}>Working</option><option value="not-working" ${game.status === 'not-working' ? 'selected' : ''}>Not Working</option></select></div>
-                <button class="btn btn-delete remove-item-btn" data-type="game" data-index="${index}">Remove Game</button>`;
+            gameCard.innerHTML = `<h4>Game #${index + 1}</h4><div class="form-group"><label>Name</label><input type="text" class="game-name" value="${game.name || ''}"></div><div class="form-group"><label>Image URL</label><input type="text" class="game-image" value="${game.image || ''}"></div><div class="form-group"><label>Game Redirection URL</label><input type="text" class="game-redirection" value="${game.redirection || ''}"></div><div class="form-group"><label>Status</label><select class="game-status"><option value="working" ${game.status === 'working' ? 'selected' : ''}>Working</option><option value="not-working" ${game.status === 'not-working' ? 'selected' : ''}>Not Working</option></select></div><button class="btn btn-delete remove-item-btn" data-type="game" data-index="${index}">Remove Game</button>`;
             gamesListContainer.appendChild(gameCard);
         });
     }
@@ -218,11 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         websiteData.credits.forEach((credit, index) => {
             const creditCard = document.createElement('div');
             creditCard.className = 'item-card';
-            creditCard.innerHTML = `<h4>Credit #${index + 1}</h4>
-                <div class="form-group"><label>Name</label><input type="text" class="credit-name" value="${credit.name || ''}"></div>
-                <div class="form-group"><label>Image URL</label><input type="text" class="credit-image" value="${credit.image || ''}"></div>
-                <div class="form-group"><label>Role</label><input type="text" class="credit-role" value="${credit.role || ''}"></div>
-                <button class="btn btn-delete remove-item-btn" data-type="credit" data-index="${index}">Remove Credit</button>`;
+            creditCard.innerHTML = `<h4>Credit #${index + 1}</h4><div class="form-group"><label>Name</label><input type="text" class="credit-name" value="${credit.name || ''}"></div><div class="form-group"><label>Image URL</label><input type="text" class="credit-image" value="${credit.image || ''}"></div><div class="form-group"><label>Role</label><input type="text" class="credit-role" value="${credit.role || ''}"></div><button class="btn btn-delete remove-item-btn" data-type="credit" data-index="${index}">Remove Credit</button>`;
             creditsListContainer.appendChild(creditCard);
         });
     }
