@@ -1,0 +1,75 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000; // Render will set the PORT environment variable
+
+// --- MIDDLEWARE ---
+app.use(cors()); // Allow requests from any origin
+app.use(bodyParser.json());
+
+// --- SECURITY ---
+// This is a simple middleware to protect our update route.
+// In a real app, you'd use a more robust system, but this is great for personal projects.
+const requireApiKey = (req, res, next) => {
+    const apiKey = req.header('X-API-KEY');
+    const SECRET_API_KEY = process.env.SECRET_API_KEY; // We will set this on Render
+
+    if (apiKey && apiKey === SECRET_API_KEY) {
+        next(); // The key is valid, proceed to the route
+    } else {
+        res.status(401).json({ error: 'Unauthorized. Invalid API Key.' });
+    }
+};
+
+
+// --- DATABASE STUFF ---
+const dbPath = path.join(__dirname, 'data.json');
+
+const readData = () => {
+    const rawData = fs.readFileSync(dbPath);
+    return JSON.parse(rawData);
+};
+
+const writeData = (data) => {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+};
+
+// --- API ROUTES ---
+
+// GET route: This is public. The main website will use this.
+app.get('/api/content', (req, res) => {
+    try {
+        const data = readData();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Could not read data.' });
+    }
+});
+
+// POST route: This is private. The dev panel will use this.
+// We protect it with our `requireApiKey` middleware.
+app.post('/api/content', requireApiKey, (req, res) => {
+    try {
+        const newData = req.body;
+
+        // Basic validation to make sure the data looks right
+        if (!newData.scriptContent || !newData.supported || !newData.credits) {
+            return res.status(400).json({ error: 'Invalid data format.' });
+        }
+
+        writeData(newData);
+        res.json({ success: true, message: 'Website content updated!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Could not write data.' });
+    }
+});
+
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
