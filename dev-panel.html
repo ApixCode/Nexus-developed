@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dev Content Panel</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: #eee; margin: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        h1, h2 { color: #e50914; }
+        textarea, input { width: 98%; padding: 10px; margin-bottom: 10px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
+        .item-group { border: 1px solid #444; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        button { background-color: #e50914; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; }
+        button:hover { background-color: #f6121D; }
+        .remove-btn { background-color: #555; }
+        #status { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Developer Content Panel</h1>
+    <p>Use this page to update the live website content.</p>
+    
+    <div>
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" placeholder="https://your-api-name.onrender.com">
+    </div>
+    <div>
+        <label for="apiKey">SECRET API KEY:</label>
+        <input type="password" id="apiKey" placeholder="Your secret key">
+    </div>
+    <hr>
+    
+    <h2>Script Panel</h2>
+    <textarea id="scriptInput" rows="15" placeholder="Paste your script here..."></textarea>
+    
+    <h2>Supported Panel</h2>
+    <div id="supported-list"></div>
+    <button onclick="addSupportedItem()">+ Add Supported Game</button>
+    
+    <h2>Credits Panel</h2>
+    <div id="credits-list"></div>
+    <button onclick="addCreditItem()">+ Add Developer</button>
+    
+    <hr>
+    <button onclick="updateWebsite()">UPDATE ENTIRE WEBSITE</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    // --- TEMPLATES FOR DYNAMIC ITEMS ---
+    const createSupportedItemHTML = (item = {}) => `
+        <div class="item-group">
+            <input type="text" class="supported-name" placeholder="Supported Name" value="${item.name || ''}">
+            <input type="text" class="supported-link" placeholder="Game Link" value="${item.link || ''}">
+            <input type="text" class="supported-image" placeholder="Image URL" value="${item.image || ''}">
+            <input type="text" class="supported-status" placeholder="Status (e.g., Working, Patched)" value="${item.status || ''}">
+            <button class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+    `;
+
+    const createCreditItemHTML = (item = {}) => `
+        <div class="item-group">
+            <input type="text" class="credit-name" placeholder="Dev Name" value="${item.name || ''}">
+            <input type="text" class="credit-image" placeholder="Image URL" value="${item.image || ''}">
+            <input type="text" class="credit-role" placeholder="Dev Role" value="${item.role || ''}">
+            <input type="text" class="credit-description" placeholder="Description (Optional)" value="${item.description || ''}">
+            <button class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+    `;
+
+    // --- FUNCTIONS TO ADD NEW ITEMS ---
+    const addSupportedItem = () => document.getElementById('supported-list').insertAdjacentHTML('beforeend', createSupportedItemHTML());
+    const addCreditItem = () => document.getElementById('credits-list').insertAdjacentHTML('beforeend', createCreditItemHTML());
+
+    // --- MAIN UPDATE FUNCTION ---
+    async function updateWebsite() {
+        const statusEl = document.getElementById('status');
+        const apiUrl = document.getElementById('apiUrl').value.trim();
+        const apiKey = document.getElementById('apiKey').value.trim();
+
+        if (!apiUrl || !apiKey) {
+            statusEl.textContent = 'Error: API URL and API Key are required.';
+            statusEl.style.color = 'red';
+            return;
+        }
+
+        // 1. Gather all data from the form
+        const scriptContent = document.getElementById('scriptInput').value;
+        
+        const supported = Array.from(document.querySelectorAll('#supported-list .item-group')).map(el => ({
+            name: el.querySelector('.supported-name').value,
+            link: el.querySelector('.supported-link').value,
+            image: el.querySelector('.supported-image').value,
+            status: el.querySelector('.supported-status').value,
+        }));
+
+        const credits = Array.from(document.querySelectorAll('#credits-list .item-group')).map(el => ({
+            name: el.querySelector('.credit-name').value,
+            image: el.querySelector('.credit-image').value,
+            role: el.querySelector('.credit-role').value,
+            description: el.querySelector('.credit-description').value,
+        }));
+
+        const payload = { scriptContent, supported, credits };
+
+        statusEl.textContent = 'Sending update...';
+        statusEl.style.color = 'yellow';
+        
+        // 2. Send the data to the API
+        try {
+            const response = await fetch(`${apiUrl}/api/content`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': apiKey // This is the crucial security header
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                statusEl.textContent = `Success: ${result.message}`;
+                statusEl.style.color = 'lightgreen';
+            } else {
+                statusEl.textContent = `Error: ${result.error || 'Unknown error'}`;
+                statusEl.style.color = 'red';
+            }
+        } catch (error) {
+            statusEl.textContent = `Network Error: Could not connect to the API.`;
+            statusEl.style.color = 'red';
+        }
+    }
+    
+    // Initialize with one of each item
+    addSupportedItem();
+    addCreditItem();
+</script>
+
+</body>
+</html>
