@@ -1,0 +1,19 @@
+{
+  "scriptContent": "print(\"Hello, World!\")",
+  "supported": [
+    {
+      "name": "Cool Game 1",
+      "link": "https://www.roblox.com/games/920587237/Adopt-Me",
+      "image": "https://via.placeholder.com/300x150/FF0000/000000?text=Game+Image",
+      "status": "Working"
+    }
+  ],
+  "credits": [
+    {
+      "name": "Your Name",
+      "image": "https://via.placeholder.com/150/000000/FFFFFF?text=Dev",
+      "role": "Lead Developer",
+      "description": "Creator of this awesome project."
+    }
+  ]
+}
